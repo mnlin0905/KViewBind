@@ -6,6 +6,8 @@ import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.fileTypes.FileTypes;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Pair;
@@ -22,6 +24,8 @@ import com.intellij.ui.EditorTextField;
 import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -50,7 +54,7 @@ public class KViewBind extends AnAction {
 
                 //获取文件
                 if (e.getProject() != null) {
-                    PsiFile[] filesByName = FilenameIndex.getFilesByName(e.getProject(), "test_1_n.xml", GlobalSearchScope.projectScope(e.getProject()));
+                    PsiFile[] filesByName = FilenameIndex.getFilesByName(e.getProject(), layoutFile + ".xml", GlobalSearchScope.projectScope(e.getProject()));
 
                     //如果文件能找到
                     if (filesByName.length == 1) {
@@ -93,7 +97,7 @@ public class KViewBind extends AnAction {
                                 //如果是TextView/EditText类型的视图,才会添加元素进入
                                 if (class_tag != null && class_textView != null && (class_tag.isInheritor(class_textView, false) || class_tag.equals(class_textView))) {
                                     block.append("private var ")
-                                            .append(keyValue.second.replaceAll("^.+?_(.+)$", "$1"))
+                                            .append(conventIdToParam(keyValue.second))
                                             .append(": String by viewBind(R.id.")
                                             .append(keyValue.second)
                                             .append(")\n");
@@ -114,12 +118,41 @@ public class KViewBind extends AnAction {
     }
 
     /**
+     * 将已有id转换wi变量值
+     */
+    private String conventIdToParam(String id) {
+        String old = id.replaceAll("^.+?_(.+)$", "$1");
+
+        //如果长度 多短,格式不规范,则 不进行处理
+        if (old.length() <= 1) {
+            return id;
+        }
+
+        String reg = "_+\\w";
+        Matcher matcher = Pattern.compile(reg).matcher(old);
+
+        //针对每个匹配到的内容进行替换
+        StringBuilder builder = new StringBuilder();
+        int offset = 0;
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            builder.append(old.substring(offset, start))
+                    .append(old.substring(end - 1, end).toUpperCase());
+            offset = end;
+        }
+        builder.append(old.substring(offset, old.length()));
+        String result = builder.toString().replaceAll("[^0-9a-zA-Z]", "");
+        return result.substring(0, 1).toLowerCase() + result.substring(1, result.length());
+    }
+
+    /**
      * 显示提示框
      */
     private void showDialog(final Editor editor, final String result, final int time) {
         ApplicationManager.getApplication().invokeLater(() -> {
             JBPopupFactory factory = JBPopupFactory.getInstance();
-            factory.createHtmlTextBalloonBuilder(result, null, Color.green, null)
+            factory.createHtmlTextBalloonBuilder(result, null, Color.gray, null)
                     .setFadeoutTime(time * 1000)
                     .createBalloon()
                     .show(factory.guessBestPopupLocation(editor), Balloon.Position.below);
@@ -132,7 +165,9 @@ public class KViewBind extends AnAction {
      */
     private void showEditText(String result, final Editor editor) {
         JBPopupFactory instance = JBPopupFactory.getInstance();
-        instance.createDialogBalloonBuilder(new EditorTextField(result), "KViewBind-Generate")
+        instance.createDialogBalloonBuilder(new EditorTextField(EditorFactory.getInstance().createDocument(result), null, FileTypes.PLAIN_TEXT, false, false), "KViewBind-Generate")
+                .setHideOnKeyOutside(true)
+                .setHideOnClickOutside(true)
                 .createBalloon()
                 .show(instance.guessBestPopupLocation(editor), Balloon.Position.below);
     }
