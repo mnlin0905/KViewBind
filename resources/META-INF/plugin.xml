@@ -1,0 +1,45 @@
+<idea-plugin>
+  <!--插件id-->
+  <id>com.your.company.unique.plugin.id</id>
+  <!--插件名称-->
+  <name>KViewBind</name>
+  <!--版本号-->
+  <version>1.0</version>
+  <!--插件者信息-->
+  <vendor email="mnlin0905@gmail.com" url="https://github.com/lovingning">MNLIN</vendor>
+
+  <!--插件描述-->
+  <description><![CDATA[
+      a plugin for view to set proxy.<br>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      Ver 1.0<br>
+      <em>null</em>
+    ]]>
+  </change-notes>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+  <idea-version since-build="173.0"/>
+
+  <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+       on how to target different products -->
+  <!-- uncomment to enable plugin in all products
+  <depends>com.intellij.modules.lang</depends>
+  -->
+
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+  </extensions>
+
+  <!--动作注册-->
+  <actions>
+    <!-- Add your actions here -->
+    <action id="KViewBind" class="com.knowledge.mnlin.KViewBind" text="KViewBind"
+            description="view inject proxy">
+      <add-to-group group-id="CodeMenu" anchor="first"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt B"/>
+    </action>
+  </actions>
+
+</idea-plugin>
